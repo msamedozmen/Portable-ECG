@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="code"/></w:pPr><w:r><w:t><![CDATA[classdef ecgAppDesingTriall < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                    matlab.ui.Figure
+        fftPlot                     matlab.ui.control.UIAxes
+        filtering                   matlab.ui.control.UIAxes
+        SwitchLabel                 matlab.ui.control.Label
+        Switch                      matlab.ui.control.Switch
+        BANDKnobLabel               matlab.ui.control.Label
+        BANDKnob                    matlab.ui.control.DiscreteKnob
+        normal                      matlab.ui.control.UIAxes
+        FilteringTypeKnobLabel      matlab.ui.control.Label
+        FilteringTypeKnob           matlab.ui.control.DiscreteKnob
+        filteringFft                matlab.ui.control.UIAxes
+        rsellipEditFieldLabel       matlab.ui.control.Label
+        rsellipEditField            matlab.ui.control.NumericEditField
+        wpEllipChebyLowValueLabel   matlab.ui.control.Label
+        wpBelowValue                matlab.ui.control.NumericEditField
+        BPMLabel                    matlab.ui.control.Label
+        nAllLabel                   matlab.ui.control.Label
+        nOrderField                 matlab.ui.control.NumericEditField
+        WnbutterEditFieldLabel      matlab.ui.control.Label
+        WnbutterEditField           matlab.ui.control.NumericEditField
+        wpHighvalueLabel            matlab.ui.control.Label
+        wpAboveValue                matlab.ui.control.NumericEditField
+        saveswitchSwitchLabel       matlab.ui.control.Label
+        saveswitchSwitch            matlab.ui.control.ToggleSwitch
+        rpchebyellipEditFieldLabel  matlab.ui.control.Label
+        rpchebyellipEditField       matlab.ui.control.NumericEditField
+        EditField_2                 matlab.ui.control.NumericEditField
+        saveButton                  matlab.ui.control.Button
+        plottingsaveddataButton     matlab.ui.control.Button
+        fftPlot_2                   matlab.ui.control.UIAxes
+        fftPlot_3                   matlab.ui.control.UIAxes
+        EditField_3                 matlab.ui.control.NumericEditField
+        fftPlot_4                   matlab.ui.control.UIAxes
+        fftPlot_5                   matlab.ui.control.UIAxes
+    end
+
+    
+    properties (Access = public)
+        Property % Description
+        maxval,Peaks,storagePeak,lengthFft2,xdomain2,fftVec2,signalFft2,counter2,
+        value3,value2,lengthFft,xdomain,s,t,b,a,value,fs,ecgVec,signalFft,
+        c,d,e,f,variable,order,value1,results,j,counter,fftVec,storage,savedData,
+        lengthOfData,storedData,value8,signalFft3,lengthFft3,results2,results3,signalFft4
+        lengthFft4,xdomain3
+    end
+    
+    methods (Access = private)
+        
+        
+    end
+    
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Value changed function: Switch
+        function SwitchValueChanged(app, event)
+app.value = app.Switch.Value;          
+delete(instrfindall);   
+app.s = serial('COM8');
+fopen(app.s); 
+app.fs=65;
+app.ecgVec=ones(1,2000);
+app.counter2=0;
+app.fftVec=ones(1,30);
+app.fftVec2=ones(1,30);
+app.results=ones(1,2000);
+app.storedData=0;
+while app.value=="On"
+ app.counter2=app.counter2+1;
+ app.counter=0;
+   
+    
+    drawnow
+    app.value1 = app.FilteringTypeKnob.Value;
+    app.variable=app.BANDKnob;
+    app.value = app.Switch.Value; 
+    for i=1:1:20
+        app.j=str2double(fgetl(app.s));
+        app.ecgVec=[app.ecgVec([2:end]), app.j];
+       
+    end
+   
+    
+    plot(app.normal,app.ecgVec);
+    xlim(app.normal,[1750,2000])
+    
+    if  app.value1=='b'
+       if app.BANDKnob.Value=='b'
+           [app.b,app.a] = butter(app.nOrderField.Value,[app.WnbutterEditField.Value app.wpAboveValue.Value+1]/(100),("bandpass"));
+            app.results = filter(app.b,app.a,app.ecgVec);
+       elseif app.BANDKnob.Value=='h'
+           [app.b,app.a] = butter(app.nOrderField.Value,app.WnbutterEditField.Value/(100),("high"));
+            app.results = filter(app.b,app.a,app.ecgVec);
+       elseif app.BANDKnob.Value=='l'
+            [app.b,app.a] = butter(app.nOrderField.Value,app.WnbutterEditField.Value/(100),("low"));
+            app.results = filter(app.b,app.a,app.ecgVec);
+       end
+    
+    elseif app.value1=='e'
+        if app.BANDKnob.Value=='b'
+        [app.c,app.d] = ellip(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.rsellipEditField.Value,[app.wpBelowValue.Value app.wpAboveValue.Value+1]/(200/2),'bandpass');
+        app.results = filter(app.c,app.d,app.ecgVec);
+        elseif app.BANDKnob.Value=='l'
+        [app.c,app.d] = ellip(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.rsellipEditField.Value,app.wpBelowValue.Value/(200/2),'low');
+        app.results = filter(app.c,app.d,app.ecgVec);
+        elseif app.BANDKnob.Value=='h'  
+         [app.c,app.d] = ellip(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.rsellipEditField.Value,app.wpBelowValue.Value/(200/2),'high');
+          app.results = filter(app.c,app.d,app.ecgVec);
+        end
+    
+    elseif app.value1=='c'
+       if app.BANDKnob.Value=='b'
+        [app.e,app.f] = cheby1(app.nOrderField.Value,app.rpchebyellipEditField.Value,[app.wpBelowValue.Value app.wpAboveValue.Value]/(200/2),'bandpass');      
+        app.results = filter(app.e,app.f,app.ecgVec);
+       elseif app.BANDKnob.Value=='h'
+         [app.e,app.f] = cheby1(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.wpBelowValue.Value /(200/2),'high');      
+        app.results = filter(app.e,app.f,app.ecgVec);      
+       elseif app.BANDKnob.Value=='l'
+        [app.e,app.f] = cheby1(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.wpBelowValue.Value/(200/2),'low');      
+        app.results = filter(app.e,app.f,app.ecgVec);
+       end
+    else    
+      app.results=0;     
+    end
+     if mod(app.counter2,3)==0
+        app.storagePeak = findpeaks(app.ecgVec(1,1350:2000));
+        app.Peaks = 0;
+        app.maxval = max(app.storagePeak);
+        for i = 1: length(app.storagePeak)
+            if app.maxval*0.75 < app.storagePeak(i)
+            app.Peaks = app.Peaks + 1;
+            end
+        end 
+        app.EditField_3.Value=app.Peaks*6;
+    end
+    app.fftVec2 = (app.results-mean(app.results));
+    app.signalFft2=abs(fft(app.fftVec2));
+    app.lengthFft2=length(app.signalFft2);
+    app.xdomain2=linspace(0,app.fs,app.lengthFft2);
+    plot(app.filteringFft,app.xdomain2,app.signalFft2); 
+    xlim(app.filteringFft,[0,32.5]);
+    plot(app.filtering, app.results);
+    xlim(app.filtering,[1750,2000])
+   
+    
+    app.fftVec = (app.ecgVec-mean(app.ecgVec));
+    app.signalFft=abs(fft(app.fftVec));
+    app.lengthFft=length(app.signalFft);
+    app.xdomain=linspace(0,app.fs,app.lengthFft);
+    plot(app.fftPlot,app.xdomain,app.signalFft); 
+    xlim(app.fftPlot,[0,32.5]);
+     if app.saveswitchSwitch.Value== "On"
+        load 'C:\Users\hmk44\OneDrive\Documents\MATLAB\name2.mat'
+       
+        if  app.value1=='b'
+        if app.BANDKnob.Value=='b'
+           [app.b,app.a] = butter(app.nOrderField.Value,[app.WnbutterEditField.Value app.wpAboveValue.Value+1]/(100),("bandpass"));
+            app.results2 = filter(app.b,app.a,app.storedData);
+        elseif app.BANDKnob.Value=='h'
+           [app.b,app.a] = butter(app.nOrderField.Value,app.WnbutterEditField.Value/(100),("high"));
+            app.results2 = filter(app.b,app.a,app.storedData);
+        elseif app.BANDKnob.Value=='l'
+            [app.b,app.a] = butter(app.nOrderField.Value,app.WnbutterEditField.Value/(100),("low"));
+            app.results2 = filter(app.b,app.a,app.storedData);
+        end
+    
+        elseif app.value1=='e'
+        if app.BANDKnob.Value=='b'
+        [app.c,app.d] = ellip(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.rsellipEditField.Value,[app.wpBelowValue.Value app.wpAboveValue.Value+1]/(200/2),'bandpass');
+        app.results2 = filter(app.c,app.d,app.storedData);
+        elseif app.BANDKnob.Value=='l'
+        [app.c,app.d] = ellip(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.rsellipEditField.Value,app.wpBelowValue.Value/(200/2),'low');
+        app.results2 = filter(app.c,app.d,app.storedData);
+        elseif app.BANDKnob.Value=='h'  
+         [app.c,app.d] = ellip(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.rsellipEditField.Value,app.wpBelowValue.Value/(200/2),'high');
+          app.results2 = filter(app.c,app.d,app.storedData);
+        end
+    
+        elseif app.value1=='c'
+        if app.BANDKnob.Value=='b'
+        [app.e,app.f] = cheby1(app.nOrderField.Value,app.rpchebyellipEditField.Value,[app.wpBelowValue.Value app.wpAboveValue.Value]/(200/2),'bandpass');      
+        app.results2 = filter(app.e,app.f,app.storedData);
+        elseif app.BANDKnob.Value=='h'
+         [app.e,app.f] = cheby1(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.wpBelowValue.Value /(200/2),'high');      
+        app.results2 = filter(app.e,app.f,app.storedData);      
+        elseif app.BANDKnob.Value=='l'
+        [app.e,app.f] = cheby1(app.nOrderField.Value,app.rpchebyellipEditField.Value,app.wpBelowValue.Value/(200/2),'low');      
+        app.results2 = filter(app.e,app.f,app.storedData);
+        end
+        else    
+        app.results2=0;     
+        end
+        plot(app.fftPlot_4,app.results2);
+        plot(app.fftPlot_2,StoredData)
+        app.savedData = (app.storedData-mean(app.storedData));
+        app.signalFft3=abs(fft(app.savedData));
+        app.lengthFft3=length(app.signalFft3);
+        app.xdomain2=linspace(0,app.fs,app.lengthFft3);
+        plot(app.fftPlot_3,app.xdomain2,app.signalFft3); 
+        xlim(app.fftPlot_3,[0,32.5]);
+        app.results3=(app.results2-mean(app.results2));
+        app.signalFft4=abs(fft(app.results3));
+        app.lengthFft4=length(app.signalFft4);
+        app.xdomain3=linspace(0,app.fs,app.lengthFft4);
+        plot(app.fftPlot_5,app.xdomain3,app.signalFft4);
+         xlim(app.fftPlot_5,[0,32.5]);
+        
+        
+if true
+    app.saveswitchSwitch.Value= "Off";
+    
+end
+    
+    end
+end 
+        end
+
+        % Callback function
+        function saveData(app, event)
+            if app.saveButton==1
+                save storedData app.ecgVec 
+            end
+          
+        end
+
+        % Callback function
+        function EditFieldValueChanged(app, event)
+            app.value2 = app.EditField.Value;
+        end
+
+        % Value changed function: rpchebyellipEditField
+        function rpchebyellipEditFieldValueChanged(app, event)
+            app.value3 = app.rpchebyellipEditField.Value;
+            
+        end
+
+        % Value changed function: nOrderField
+        function nOrderFieldValueChanged(app, event)
+            app.value = app.nOrderField.Value;
+
+        end
+
+        % Value changed function: rsellipEditField
+        function rsellipEditFieldValueChanged(app, event)
+            app.value = app.rsellipEditField.Value;
+
+        end
+
+        % Value changed function: wpBelowValue
+        function wpBelowValueValueChanged(app, event)
+            app.value = app.wpBelowValue.Value;
+        end
+
+        % Value changed function: WnbutterEditField
+        function WnbutterEditFieldValueChanged(app, event)
+            app.value = app.WnbutterEditField.Value;
+
+        end
+
+        % Value changed function: wpAboveValue
+        function wpAboveValueValueChanged(app, event)
+            app.value = app.wpAboveValue.Value;
+            
+        end
+
+        % Value changed function: EditField_2
+        function EditField_2ValueChanged(app, event)
+            app.value = app.EditField_2.Value;
+            
+        end
+
+        % Button pushed function: saveButton
+        function saveButtonPushed(app, event)
+      app.storedData=zeros(1,app.EditField_2.Value*64);
+      for i=1:1:length(app.storedData)
+          app.storedData(i)=app.ecgVec(2000-i); 
+      end
+      StoredData = app.storedData;
+      save("name2", "StoredData");
+         
+        end
+
+        % Button pushed function: plottingsaveddataButton
+        function plottingsaveddataButtonPushed(app, event)
+            load("name2.mat")
+            for i=1:1:length(StoredData)
+                disp(StoredData)
+            end
+        end
+
+        % Value changed function: BANDKnob
+        function BANDKnobValueChanged(app, event)
+            value = app.BANDKnob.Value;
+            
+        end
+
+        % Value changed function: EditField_3
+        function EditField_3ValueChanged(app, event)
+            value = app.EditField_3.Value;
+            
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure and hide until all components are created
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Color = [0.0235 0.0118 0.0902];
+            app.UIFigure.Colormap = [0.2431 0.149 0.6588;0.2392 0.149 0.6706;0.251 0.1608 0.6902;0.251 0.1608 0.702;0.251 0.1647 0.7059;0.251 0.1686 0.7176;0.2549 0.1725 0.7294;0.2549 0.1765 0.7412;0.2588 0.1804 0.749;0.2588 0.1843 0.7608;0.2627 0.1882 0.7725;0.2627 0.1922 0.7843;0.2627 0.1961 0.7922;0.2667 0.2 0.8039;0.2667 0.2039 0.8157;0.2706 0.2078 0.8235;0.2706 0.2157 0.8353;0.2706 0.2196 0.8431;0.2745 0.2235 0.851;0.2745 0.2275 0.8627;0.2745 0.2314 0.8706;0.2745 0.2392 0.8784;0.2784 0.2431 0.8824;0.2784 0.2471 0.8902;0.2784 0.2549 0.898;0.2784 0.2588 0.902;0.2784 0.2667 0.9098;0.2784 0.2706 0.9137;0.2784 0.2745 0.9216;0.2824 0.2824 0.9255;0.2824 0.2863 0.9294;0.2824 0.2941 0.9333;0.2824 0.298 0.9412;0.2824 0.3059 0.9451;0.2824 0.3098 0.949;0.2824 0.3137 0.9529;0.2824 0.3216 0.9569;0.2824 0.3255 0.9608;0.2824 0.3294 0.9647;0.2784 0.3373 0.9686;0.2784 0.3412 0.9686;0.2784 0.349 0.9725;0.2784 0.3529 0.9765;0.2784 0.3569 0.9804;0.2784 0.3647 0.9804;0.2745 0.3686 0.9843;0.2745 0.3765 0.9843;0.2745 0.3804 0.9882;0.2706 0.3843 0.9882;0.2706 0.3922 0.9922;0.2667 0.3961 0.9922;0.2627 0.4039 0.9922;0.2627 0.4078 0.9961;0.2588 0.4157 0.9961;0.2549 0.4196 0.9961;0.251 0.4275 0.9961;0.2471 0.4314 1;0.2431 0.4392 1;0.2353 0.4431 1;0.2314 0.451 1;0.2235 0.4549 1;0.2196 0.4627 0.9961;0.2118 0.4667 0.9961;0.2078 0.4745 0.9922;0.2 0.4784 0.9922;0.1961 0.4863 0.9882;0.1922 0.4902 0.9882;0.1882 0.498 0.9843;0.1843 0.502 0.9804;0.1843 0.5098 0.9804;0.1804 0.5137 0.9765;0.1804 0.5176 0.9725;0.1804 0.5255 0.9725;0.1804 0.5294 0.9686;0.1765 0.5333 0.9647;0.1765 0.5412 0.9608;0.1765 0.5451 0.9569;0.1765 0.549 0.9529;0.1765 0.5569 0.949;0.1725 0.5608 0.9451;0.1725 0.5647 0.9412;0.1686 0.5686 0.9373;0.1647 0.5765 0.9333;0.1608 0.5804 0.9294;0.1569 0.5843 0.9255;0.1529 0.5922 0.9216;0.1529 0.5961 0.9176;0.149 0.6 0.9137;0.149 0.6039 0.9098;0.1451 0.6078 0.9098;0.1451 0.6118 0.9059;0.1412 0.6196 0.902;0.1412 0.6235 0.898;0.1373 0.6275 0.898;0.1373 0.6314 0.8941;0.1333 0.6353 0.8941;0.1294 0.6392 0.8902;0.1255 0.6471 0.8902;0.1216 0.651 0.8863;0.1176 0.6549 0.8824;0.1137 0.6588 0.8824;0.1137 0.6627 0.8784;0.1098 0.6667 0.8745;0.1059 0.6706 0.8706;0.102 0.6745 0.8667;0.098 0.6784 0.8627;0.0902 0.6824 0.8549;0.0863 0.6863 0.851;0.0784 0.6902 0.8471;0.0706 0.6941 0.8392;0.0627 0.698 0.8353;0.0549 0.702 0.8314;0.0431 0.702 0.8235;0.0314 0.7059 0.8196;0.0235 0.7098 0.8118;0.0157 0.7137 0.8078;0.0078 0.7176 0.8;0.0039 0.7176 0.7922;0 0.7216 0.7882;0 0.7255 0.7804;0 0.7294 0.7765;0.0039 0.7294 0.7686;0.0078 0.7333 0.7608;0.0157 0.7333 0.7569;0.0235 0.7373 0.749;0.0353 0.7412 0.7412;0.051 0.7412 0.7373;0.0627 0.7451 0.7294;0.0784 0.7451 0.7216;0.0902 0.749 0.7137;0.102 0.7529 0.7098;0.1137 0.7529 0.702;0.1255 0.7569 0.6941;0.1373 0.7569 0.6863;0.1451 0.7608 0.6824;0.1529 0.7608 0.6745;0.1608 0.7647 0.6667;0.1686 0.7647 0.6588;0.1725 0.7686 0.651;0.1804 0.7686 0.6471;0.1843 0.7725 0.6392;0.1922 0.7725 0.6314;0.1961 0.7765 0.6235;0.2 0.7804 0.6157;0.2078 0.7804 0.6078;0.2118 0.7843 0.6;0.2196 0.7843 0.5882;0.2235 0.7882 0.5804;0.2314 0.7882 0.5725;0.2392 0.7922 0.5647;0.251 0.7922 0.5529;0.2588 0.7922 0.5451;0.2706 0.7961 0.5373;0.2824 0.7961 0.5255;0.2941 0.7961 0.5176;0.3059 0.8 0.5059;0.3176 0.8 0.498;0.3294 0.8 0.4863;0.3412 0.8 0.4784;0.3529 0.8 0.4667;0.3686 0.8039 0.4549;0.3804 0.8039 0.4471;0.3922 0.8039 0.4353;0.4039 0.8039 0.4235;0.4196 0.8039 0.4118;0.4314 0.8039 0.4;0.4471 0.8039 0.3922;0.4627 0.8 0.3804;0.4745 0.8 0.3686;0.4902 0.8 0.3569;0.5059 0.8 0.349;0.5176 0.8 0.3373;0.5333 0.7961 0.3255;0.5451 0.7961 0.3176;0.5608 0.7961 0.3059;0.5765 0.7922 0.2941;0.5882 0.7922 0.2824;0.6039 0.7882 0.2745;0.6157 0.7882 0.2627;0.6314 0.7843 0.251;0.6431 0.7843 0.2431;0.6549 0.7804 0.2314;0.6706 0.7804 0.2235;0.6824 0.7765 0.2157;0.698 0.7765 0.2078;0.7098 0.7725 0.2;0.7216 0.7686 0.1922;0.7333 0.7686 0.1843;0.7451 0.7647 0.1765;0.7608 0.7647 0.1725;0.7725 0.7608 0.1647;0.7843 0.7569 0.1608;0.7961 0.7569 0.1569;0.8078 0.7529 0.1529;0.8157 0.749 0.1529;0.8275 0.749 0.1529;0.8392 0.7451 0.1529;0.851 0.7451 0.1569;0.8588 0.7412 0.1569;0.8706 0.7373 0.1608;0.8824 0.7373 0.1647;0.8902 0.7373 0.1686;0.902 0.7333 0.1765;0.9098 0.7333 0.1804;0.9176 0.7294 0.1882;0.9255 0.7294 0.1961;0.9373 0.7294 0.2078;0.9451 0.7294 0.2157;0.9529 0.7294 0.2235;0.9608 0.7294 0.2314;0.9686 0.7294 0.2392;0.9765 0.7294 0.2431;0.9843 0.7333 0.2431;0.9882 0.7373 0.2431;0.9961 0.7412 0.2392;0.9961 0.7451 0.2353;0.9961 0.7529 0.2314;0.9961 0.7569 0.2275;0.9961 0.7608 0.2235;0.9961 0.7686 0.2196;0.9961 0.7725 0.2157;0.9961 0.7804 0.2078;0.9961 0.7843 0.2039;0.9961 0.7922 0.2;0.9922 0.7961 0.1961;0.9922 0.8039 0.1922;0.9922 0.8078 0.1922;0.9882 0.8157 0.1882;0.9843 0.8235 0.1843;0.9843 0.8275 0.1804;0.9804 0.8353 0.1804;0.9765 0.8392 0.1765;0.9765 0.8471 0.1725;0.9725 0.851 0.1686;0.9686 0.8588 0.1647;0.9686 0.8667 0.1647;0.9647 0.8706 0.1608;0.9647 0.8784 0.1569;0.9608 0.8824 0.1569;0.9608 0.8902 0.1529;0.9608 0.898 0.149;0.9608 0.902 0.149;0.9608 0.9098 0.1451;0.9608 0.9137 0.1412;0.9608 0.9216 0.1373;0.9608 0.9255 0.1333;0.9608 0.9333 0.1294;0.9647 0.9373 0.1255;0.9647 0.9451 0.1216;0.9647 0.949 0.1176;0.9686 0.9569 0.1098;0.9686 0.9608 0.1059;0.9725 0.9686 0.102;0.9725 0.9725 0.0941;0.9765 0.9765 0.0863;0.9765 0.9843 0.0824];
+            app.UIFigure.Position = [100 100 1316 502];
+            app.UIFigure.Name = 'UI Figure';
+
+            % Create fftPlot
+            app.fftPlot = uiaxes(app.UIFigure);
+            title(app.fftPlot, 'FFT of Raw Signal')
+            xlabel(app.fftPlot, 'Frequency')
+            ylabel(app.fftPlot, 'Amplitude')
+            app.fftPlot.PlotBoxAspectRatio = [1.94615384615385 1 1];
+            app.fftPlot.FontAngle = 'italic';
+            app.fftPlot.FontWeight = 'bold';
+            app.fftPlot.ColorOrder = [0 0.4471 0.7412;0.851 0.3255 0.098;0.9294 0.6941 0.1255;0.4941 0.1843 0.5569;0.4667 0.6745 0.1882;0.302 0.7451 0.9333;1 0 0];
+            app.fftPlot.GridColor = [0.651 0.651 0.651];
+            app.fftPlot.XColor = [1 1 1];
+            app.fftPlot.YColor = [1 1 1];
+            app.fftPlot.ZColor = [0 0 0];
+            app.fftPlot.Color = [0.149 0.149 0.149];
+            app.fftPlot.XGrid = 'on';
+            app.fftPlot.YGrid = 'on';
+            app.fftPlot.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.fftPlot.Position = [383 304 294 176];
+
+            % Create filtering
+            app.filtering = uiaxes(app.UIFigure);
+            title(app.filtering, 'Filtered Signal')
+            xlabel(app.filtering, 'Time')
+            ylabel(app.filtering, 'Amplitude')
+            app.filtering.PlotBoxAspectRatio = [1.94615384615385 1 1];
+            app.filtering.FontAngle = 'italic';
+            app.filtering.ColorOrder = [0 0.4471 0.7412;0.851 0.3255 0.098;0.9294 0.6941 0.1255;0.4941 0.1843 0.5569;0.4667 0.6745 0.1882;0.302 0.7451 0.9333;0.6353 0.0784 0.1843];
+            app.filtering.XColor = [1 1 1];
+            app.filtering.YColor = [1 1 1];
+            app.filtering.ZColor = [1 1 1];
+            app.filtering.Color = [0.149 0.149 0.149];
+            app.filtering.XGrid = 'on';
+            app.filtering.YGrid = 'on';
+            app.filtering.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.filtering.Position = [2 84 310 209];
+
+            % Create SwitchLabel
+            app.SwitchLabel = uilabel(app.UIFigure);
+            app.SwitchLabel.HorizontalAlignment = 'center';
+            app.SwitchLabel.FontColor = [1 1 0];
+            app.SwitchLabel.Position = [334 433 41 22];
+            app.SwitchLabel.Text = 'Switch';
+
+            % Create Switch
+            app.Switch = uiswitch(app.UIFigure, 'slider');
+            app.Switch.ValueChangedFcn = createCallbackFcn(app, @SwitchValueChanged, true);
+            app.Switch.FontColor = [1 1 0];
+            app.Switch.Position = [331 470 45 20];
+
+            % Create BANDKnobLabel
+            app.BANDKnobLabel = uilabel(app.UIFigure);
+            app.BANDKnobLabel.HorizontalAlignment = 'center';
+            app.BANDKnobLabel.FontColor = [1 1 0];
+            app.BANDKnobLabel.Position = [41 52 39 22];
+            app.BANDKnobLabel.Text = 'BAND';
+
+            % Create BANDKnob
+            app.BANDKnob = uiknob(app.UIFigure, 'discrete');
+            app.BANDKnob.Items = {'l', 'h', 'b'};
+            app.BANDKnob.ValueChangedFcn = createCallbackFcn(app, @BANDKnobValueChanged, true);
+            app.BANDKnob.FontColor = [1 1 0];
+            app.BANDKnob.Position = [87 19 46 46];
+            app.BANDKnob.Value = 'l';
+
+            % Create normal
+            app.normal = uiaxes(app.UIFigure);
+            title(app.normal, 'Raw Signal')
+            xlabel(app.normal, 'Time')
+            ylabel(app.normal, 'Amplitude')
+            app.normal.PlotBoxAspectRatio = [1.94615384615385 1 1];
+            app.normal.FontAngle = 'italic';
+            app.normal.FontWeight = 'bold';
+            app.normal.ColorOrderIndex = 2;
+            app.normal.LineStyleOrderIndex = 2;
+            app.normal.GridColor = [0.651 0.651 0.651];
+            app.normal.MinorGridColor = [0 0 0];
+            app.normal.XColor = [1 1 1];
+            app.normal.YColor = [1 1 1];
+            app.normal.Color = [0.149 0.149 0.149];
+            app.normal.XGrid = 'on';
+            app.normal.YGrid = 'on';
+            app.normal.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.normal.Position = [5 273 303 224];
+
+            % Create FilteringTypeKnobLabel
+            app.FilteringTypeKnobLabel = uilabel(app.UIFigure);
+            app.FilteringTypeKnobLabel.HorizontalAlignment = 'center';
+            app.FilteringTypeKnobLabel.FontColor = [0 1 1];
+            app.FilteringTypeKnobLabel.Position = [275 51 78 22];
+            app.FilteringTypeKnobLabel.Text = 'Filtering Type';
+
+            % Create FilteringTypeKnob
+            app.FilteringTypeKnob = uiknob(app.UIFigure, 'discrete');
+            app.FilteringTypeKnob.Items = {'Off', 'b', 'e', 'c'};
+            app.FilteringTypeKnob.FontColor = [0 1 1];
+            app.FilteringTypeKnob.Position = [219 17 51 51];
+
+            % Create filteringFft
+            app.filteringFft = uiaxes(app.UIFigure);
+            title(app.filteringFft, 'FFT of Filtered Signal')
+            xlabel(app.filteringFft, 'Frequency')
+            ylabel(app.filteringFft, 'Amplitude')
+            app.filteringFft.PlotBoxAspectRatio = [2.4639175257732 1 1];
+            app.filteringFft.FontWeight = 'bold';
+            app.filteringFft.GridColor = [0.651 0.651 0.651];
+            app.filteringFft.XColor = [1 1 1];
+            app.filteringFft.YColor = [1 1 1];
+            app.filteringFft.ZColor = [0 0 0];
+            app.filteringFft.Color = [0.149 0.149 0.149];
+            app.filteringFft.XGrid = 'on';
+            app.filteringFft.YGrid = 'on';
+            app.filteringFft.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.filteringFft.Position = [392 120 294 194];
+
+            % Create rsellipEditFieldLabel
+            app.rsellipEditFieldLabel = uilabel(app.UIFigure);
+            app.rsellipEditFieldLabel.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.rsellipEditFieldLabel.HorizontalAlignment = 'right';
+            app.rsellipEditFieldLabel.FontColor = [1 1 1];
+            app.rsellipEditFieldLabel.Position = [379 57 45 22];
+            app.rsellipEditFieldLabel.Text = 'rs(ellip)';
+
+            % Create rsellipEditField
+            app.rsellipEditField = uieditfield(app.UIFigure, 'numeric');
+            app.rsellipEditField.ValueChangedFcn = createCallbackFcn(app, @rsellipEditFieldValueChanged, true);
+            app.rsellipEditField.FontColor = [1 1 1];
+            app.rsellipEditField.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.rsellipEditField.Position = [439 57 67 22];
+            app.rsellipEditField.Value = 50;
+
+            % Create wpEllipChebyLowValueLabel
+            app.wpEllipChebyLowValueLabel = uilabel(app.UIFigure);
+            app.wpEllipChebyLowValueLabel.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.wpEllipChebyLowValueLabel.HorizontalAlignment = 'right';
+            app.wpEllipChebyLowValueLabel.FontColor = [1 1 1];
+            app.wpEllipChebyLowValueLabel.Position = [501 54 86 28];
+            app.wpEllipChebyLowValueLabel.Text = {'wp(Ellip,Cheby'; ' Low Value)'};
+
+            % Create wpBelowValue
+            app.wpBelowValue = uieditfield(app.UIFigure, 'numeric');
+            app.wpBelowValue.ValueChangedFcn = createCallbackFcn(app, @wpBelowValueValueChanged, true);
+            app.wpBelowValue.FontColor = [1 1 1];
+            app.wpBelowValue.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.wpBelowValue.Position = [602 60 63 22];
+            app.wpBelowValue.Value = 1.5;
+
+            % Create BPMLabel
+            app.BPMLabel = uilabel(app.UIFigure);
+            app.BPMLabel.FontName = 'Berlin Sans FB Demi';
+            app.BPMLabel.FontSize = 24;
+            app.BPMLabel.FontColor = [1 0 0];
+            app.BPMLabel.Position = [263 267 58 47];
+            app.BPMLabel.Text = 'BPM';
+
+            % Create nAllLabel
+            app.nAllLabel = uilabel(app.UIFigure);
+            app.nAllLabel.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.nAllLabel.HorizontalAlignment = 'right';
+            app.nAllLabel.FontName = 'Arial Narrow';
+            app.nAllLabel.FontColor = [1 1 1];
+            app.nAllLabel.Position = [392 99 28 22];
+            app.nAllLabel.Text = {'n(All)'; ''};
+
+            % Create nOrderField
+            app.nOrderField = uieditfield(app.UIFigure, 'numeric');
+            app.nOrderField.ValueChangedFcn = createCallbackFcn(app, @nOrderFieldValueChanged, true);
+            app.nOrderField.FontName = 'Arial Narrow';
+            app.nOrderField.FontColor = [1 1 1];
+            app.nOrderField.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.nOrderField.Position = [435 99 67 22];
+            app.nOrderField.Value = 1;
+
+            % Create WnbutterEditFieldLabel
+            app.WnbutterEditFieldLabel = uilabel(app.UIFigure);
+            app.WnbutterEditFieldLabel.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.WnbutterEditFieldLabel.HorizontalAlignment = 'right';
+            app.WnbutterEditFieldLabel.FontColor = [1 1 1];
+            app.WnbutterEditFieldLabel.Position = [362 19 62 22];
+            app.WnbutterEditFieldLabel.Text = 'Wn(butter)';
+
+            % Create WnbutterEditField
+            app.WnbutterEditField = uieditfield(app.UIFigure, 'numeric');
+            app.WnbutterEditField.ValueChangedFcn = createCallbackFcn(app, @WnbutterEditFieldValueChanged, true);
+            app.WnbutterEditField.FontColor = [1 1 1];
+            app.WnbutterEditField.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.WnbutterEditField.Position = [439 19 68 22];
+            app.WnbutterEditField.Value = 5;
+
+            % Create wpHighvalueLabel
+            app.wpHighvalueLabel = uilabel(app.UIFigure);
+            app.wpHighvalueLabel.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.wpHighvalueLabel.HorizontalAlignment = 'right';
+            app.wpHighvalueLabel.FontColor = [1 1 1];
+            app.wpHighvalueLabel.Position = [539 17 52 28];
+            app.wpHighvalueLabel.Text = {'wp High '; 'value'};
+
+            % Create wpAboveValue
+            app.wpAboveValue = uieditfield(app.UIFigure, 'numeric');
+            app.wpAboveValue.ValueChangedFcn = createCallbackFcn(app, @wpAboveValueValueChanged, true);
+            app.wpAboveValue.FontColor = [1 1 1];
+            app.wpAboveValue.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.wpAboveValue.Position = [606 23 59 22];
+            app.wpAboveValue.Value = 13;
+
+            % Create saveswitchSwitchLabel
+            app.saveswitchSwitchLabel = uilabel(app.UIFigure);
+            app.saveswitchSwitchLabel.HorizontalAlignment = 'center';
+            app.saveswitchSwitchLabel.FontColor = [1 1 1];
+            app.saveswitchSwitchLabel.Position = [320 321 68 22];
+            app.saveswitchSwitchLabel.Text = 'save switch';
+
+            % Create saveswitchSwitch
+            app.saveswitchSwitch = uiswitch(app.UIFigure, 'toggle');
+            app.saveswitchSwitch.FontColor = [1 1 1];
+            app.saveswitchSwitch.Position = [339 365 20 45];
+
+            % Create rpchebyellipEditFieldLabel
+            app.rpchebyellipEditFieldLabel = uilabel(app.UIFigure);
+            app.rpchebyellipEditFieldLabel.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.rpchebyellipEditFieldLabel.HorizontalAlignment = 'right';
+            app.rpchebyellipEditFieldLabel.FontColor = [1 1 1];
+            app.rpchebyellipEditFieldLabel.Position = [507 99 80 22];
+            app.rpchebyellipEditFieldLabel.Text = 'rp(cheby,ellip)';
+
+            % Create rpchebyellipEditField
+            app.rpchebyellipEditField = uieditfield(app.UIFigure, 'numeric');
+            app.rpchebyellipEditField.ValueChangedFcn = createCallbackFcn(app, @rpchebyellipEditFieldValueChanged, true);
+            app.rpchebyellipEditField.FontColor = [1 1 1];
+            app.rpchebyellipEditField.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.rpchebyellipEditField.Position = [602 99 63 22];
+            app.rpchebyellipEditField.Value = 2;
+
+            % Create EditField_2
+            app.EditField_2 = uieditfield(app.UIFigure, 'numeric');
+            app.EditField_2.ValueChangedFcn = createCallbackFcn(app, @EditField_2ValueChanged, true);
+            app.EditField_2.Position = [124 481 100 22];
+
+            % Create saveButton
+            app.saveButton = uibutton(app.UIFigure, 'push');
+            app.saveButton.ButtonPushedFcn = createCallbackFcn(app, @saveButtonPushed, true);
+            app.saveButton.Position = [16 481 100 22];
+            app.saveButton.Text = 'save';
+
+            % Create plottingsaveddataButton
+            app.plottingsaveddataButton = uibutton(app.UIFigure, 'push');
+            app.plottingsaveddataButton.ButtonPushedFcn = createCallbackFcn(app, @plottingsaveddataButtonPushed, true);
+            app.plottingsaveddataButton.Position = [424 481 116 22];
+            app.plottingsaveddataButton.Text = 'plotting saved data';
+
+            % Create fftPlot_2
+            app.fftPlot_2 = uiaxes(app.UIFigure);
+            title(app.fftPlot_2, 'Saved Data')
+            xlabel(app.fftPlot_2, 'Time')
+            ylabel(app.fftPlot_2, 'Amplitude')
+            app.fftPlot_2.PlotBoxAspectRatio = [1.94615384615385 1 1];
+            app.fftPlot_2.FontAngle = 'italic';
+            app.fftPlot_2.FontWeight = 'bold';
+            app.fftPlot_2.ColorOrder = [0 0.4471 0.7412;0.851 0.3255 0.098;0.9294 0.6941 0.1255;0.4941 0.1843 0.5569;0.4667 0.6745 0.1882;0.302 0.7451 0.9333;1 0 0];
+            app.fftPlot_2.GridColor = [0.651 0.651 0.651];
+            app.fftPlot_2.XColor = [1 1 1];
+            app.fftPlot_2.YColor = [1 1 1];
+            app.fftPlot_2.ZColor = [0 0 0];
+            app.fftPlot_2.Color = [0.149 0.149 0.149];
+            app.fftPlot_2.XGrid = 'on';
+            app.fftPlot_2.YGrid = 'on';
+            app.fftPlot_2.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.fftPlot_2.Position = [707 273 294 189];
+
+            % Create fftPlot_3
+            app.fftPlot_3 = uiaxes(app.UIFigure);
+            title(app.fftPlot_3, 'FFT of Saved Signal')
+            xlabel(app.fftPlot_3, 'Frequency')
+            ylabel(app.fftPlot_3, 'Amplitude')
+            app.fftPlot_3.PlotBoxAspectRatio = [1.94615384615385 1 1];
+            app.fftPlot_3.FontAngle = 'italic';
+            app.fftPlot_3.FontWeight = 'bold';
+            app.fftPlot_3.ColorOrder = [0 0.4471 0.7412;0.851 0.3255 0.098;0.9294 0.6941 0.1255;0.4941 0.1843 0.5569;0.4667 0.6745 0.1882;0.302 0.7451 0.9333;1 0 0];
+            app.fftPlot_3.GridColor = [0.651 0.651 0.651];
+            app.fftPlot_3.XColor = [1 1 1];
+            app.fftPlot_3.YColor = [1 1 1];
+            app.fftPlot_3.ZColor = [0 0 0];
+            app.fftPlot_3.Color = [0.149 0.149 0.149];
+            app.fftPlot_3.XGrid = 'on';
+            app.fftPlot_3.YGrid = 'on';
+            app.fftPlot_3.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.fftPlot_3.Position = [707 51 294 186];
+
+            % Create EditField_3
+            app.EditField_3 = uieditfield(app.UIFigure, 'numeric');
+            app.EditField_3.ValueChangedFcn = createCallbackFcn(app, @EditField_3ValueChanged, true);
+            app.EditField_3.Position = [320 279 100 22];
+
+            % Create fftPlot_4
+            app.fftPlot_4 = uiaxes(app.UIFigure);
+            title(app.fftPlot_4, 'Saved Data')
+            xlabel(app.fftPlot_4, 'Time')
+            ylabel(app.fftPlot_4, 'Amplitude')
+            app.fftPlot_4.PlotBoxAspectRatio = [1.94615384615385 1 1];
+            app.fftPlot_4.FontAngle = 'italic';
+            app.fftPlot_4.FontWeight = 'bold';
+            app.fftPlot_4.ColorOrder = [0 0.4471 0.7412;0.851 0.3255 0.098;0.9294 0.6941 0.1255;0.4941 0.1843 0.5569;0.4667 0.6745 0.1882;0.302 0.7451 0.9333;1 0 0];
+            app.fftPlot_4.GridColor = [0.651 0.651 0.651];
+            app.fftPlot_4.XColor = [1 1 1];
+            app.fftPlot_4.YColor = [1 1 1];
+            app.fftPlot_4.ZColor = [0 0 0];
+            app.fftPlot_4.Color = [0.149 0.149 0.149];
+            app.fftPlot_4.XGrid = 'on';
+            app.fftPlot_4.YGrid = 'on';
+            app.fftPlot_4.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.fftPlot_4.Position = [1008 266 294 189];
+
+            % Create fftPlot_5
+            app.fftPlot_5 = uiaxes(app.UIFigure);
+            title(app.fftPlot_5, 'Saved Data')
+            xlabel(app.fftPlot_5, 'Time')
+            ylabel(app.fftPlot_5, 'Amplitude')
+            app.fftPlot_5.PlotBoxAspectRatio = [1.94615384615385 1 1];
+            app.fftPlot_5.FontAngle = 'italic';
+            app.fftPlot_5.FontWeight = 'bold';
+            app.fftPlot_5.ColorOrder = [0 0.4471 0.7412;0.851 0.3255 0.098;0.9294 0.6941 0.1255;0.4941 0.1843 0.5569;0.4667 0.6745 0.1882;0.302 0.7451 0.9333;1 0 0];
+            app.fftPlot_5.GridColor = [0.651 0.651 0.651];
+            app.fftPlot_5.XColor = [1 1 1];
+            app.fftPlot_5.YColor = [1 1 1];
+            app.fftPlot_5.ZColor = [0 0 0];
+            app.fftPlot_5.Color = [0.149 0.149 0.149];
+            app.fftPlot_5.XGrid = 'on';
+            app.fftPlot_5.YGrid = 'on';
+            app.fftPlot_5.BackgroundColor = [0.0235 0.0118 0.0902];
+            app.fftPlot_5.Position = [1000 40 294 189];
+
+            % Show the figure after all components are created
+            app.UIFigure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = ecgAppDesingTriall
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end]]></w:t></w:r></w:p></w:body></w:document>
